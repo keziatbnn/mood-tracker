@@ -5,15 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MoodTracker</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="app-wrapper">
-
-  <!-- ── NAVBAR ── -->
   <nav>
-    <a class="nav-brand" href="#" onclick="showPage('welcome', document.querySelector('.nav-links a:first-child')); return false;">
+    <div class="nav-brand">
       <svg viewBox="0 0 24 24" fill="none" stroke="#2a9d5c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"/>
         <path d="M8 13s1.5 2 4 2 4-2 4-2"/>
@@ -21,56 +19,47 @@
         <line x1="15" y1="9" x2="15.01" y2="9"/>
       </svg>
       MoodTracker
-    </a>
-
-    <nav class="nav-links">
-      <a href="#" class="active" onclick="showPage('welcome', this); return false;">Home</a>
-      <a href="#" onclick="showPage('log', this); return false;">Entries</a>
+    </div>
+    <div class="nav-links">
+      <a href="#" class="active" onclick="showPage('welcome',this)">Home</a>
+      <a href="#" onclick="showPage('log',this)">Entries</a>
       <a href="#">Calendar</a>
-      <a href="#">Statistics</a>
-    </nav>
-
+      <a href="#">Statistic</a>
+    </div>
     <div class="nav-user">
       <span id="nav-name">Name</span>
       <div class="avatar" id="nav-avatar">N</div>
     </div>
   </nav>
 
-  <!-- ── PAGE 1: WELCOME ── -->
   <div class="page active" id="page-welcome">
     <p class="welcome-date" id="welcome-date"></p>
     <h1 class="welcome-title" id="welcome-greeting">Hi, Name</h1>
     <p class="welcome-subtitle">How are you feeling today?</p>
 
     <div class="mood-row" id="welcome-moods">
-      <!-- filled by JS -->
-    </div>
+      </div>
 
     <button class="btn-next" onclick="goToLog()">Next →</button>
 
-    <p class="welcome-quote">
-      "If you spend too much time thinking about a thing, you'll never get it done."<br>
-      – Bruce Lee
-    </p>
+    <p class="welcome-quote">"If you spend too much time thinking about a thing, you'll never get it done."<br>– Bruce Lee</p>
   </div>
 
-  <!-- ── PAGE 2: LOG MOOD ── -->
   <div class="page" id="page-log">
     <div class="log-left">
       <p class="log-date" id="log-date"></p>
       <h2 class="log-title" id="log-title">How are you feeling today, Name?</h2>
 
       <div class="log-mood-row" id="log-moods">
-        <!-- filled by JS -->
-      </div>
+        </div>
 
       <label class="field-label">Add a note (optional)</label>
       <textarea id="note-input" placeholder="What's on your mind?"></textarea>
 
       <label class="field-label">Tags</label>
       <div class="tags-row">
-        <span class="tag college"  onclick="toggleTag(this)">College</span>
-        <span class="tag work"     onclick="toggleTag(this)">Work</span>
+        <span class="tag college" onclick="toggleTag(this)">College</span>
+        <span class="tag work" onclick="toggleTag(this)">Work</span>
         <span class="tag personal" onclick="toggleTag(this)">Personal</span>
       </div>
 
@@ -78,13 +67,11 @@
     </div>
 
     <div class="log-right">
-      <!-- This Week -->
       <div class="card">
         <div class="card-title">This Week</div>
         <div class="week-grid" id="week-grid"></div>
       </div>
 
-      <!-- This Month -->
       <div class="card">
         <div class="card-title">This Month</div>
         <div class="month-grid">
@@ -109,15 +96,12 @@
     </div>
   </div>
 
-  <!-- ── DOTS ── -->
   <div class="dots">
     <div class="dot active" id="dot-0"></div>
     <div class="dot" id="dot-1"></div>
   </div>
-
 </div>
 
-<!-- Toast notification -->
 <div class="toast" id="toast">Mood saved! 🎉</div>
 
 <script src="script.js"></script>

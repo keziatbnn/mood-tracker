@@ -9,7 +9,7 @@ const MOODS = [
 const TAG_STYLES = {
   College: 'bg-[#d4f0e2] text-[#1a7a42]',
   Work:    'bg-[#ffe5cc] text-[#b85e00]',
-  Personal:'bg-pink-bg text-primary',
+  Personal:'bg-[#DBEAFE] text-[#1D4ED8]',
 };
 
 let currentFilter = 'all';

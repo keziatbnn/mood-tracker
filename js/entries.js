@@ -124,25 +124,25 @@ function renderEntries() {
       }).join('');
 
       const card = document.createElement('div');
-      card.className = 'flex items-start gap-4 bg-white border border-gray-100 rounded-2xl px-5 py-4 mb-3 hover:shadow-sm transition-all';
+      card.className = 'flex items-center gap-4 bg-pink-bg border border-gray-700 rounded-2xl px-5 py-4 mb-3 hover:shadow-sm transition-all';
       card.innerHTML = `
-        <div class="flex flex-col items-center gap-1 shrink-0 w-14 pt-0.5">
-          <span style="width:36px;height:36px;display:block">${moodSVG(m, 36)}</span>
+        <div class="flex flex-col items-center gap-1 shrink-0 w-14 py-1.5 aspect-square bg-white border border-gray-700 rounded-xl">
+          <span style="width:30px;height:30px;display:block">${moodSVG(m, 30)}</span>
           <span class="text-[10px] font-semibold" style="color:${m.color}">${m.label}</span>
         </div>
         <div class="flex-1 min-w-0">
           <span class="text-[11px] text-gray-400 font-medium">${dateStr}</span>
           ${val.note ? `<p class="text-sm text-gray-700 mt-1 leading-snug">${val.note}</p>` : ''}
-          ${tags ? `<div class="flex gap-1.5 flex-wrap mt-2">${tags}</div>` : ''}
+          ${tags ? `<div class="flex gap-1.5 flex-wrap mt-1">${tags}</div>` : ''}
         </div>
         <div class="flex flex-col gap-1.5 shrink-0">
           <button onclick="openEditModal('${key}')"
-            class="w-8 h-8 flex items-center justify-center rounded-xl border border-gray-200 text-gray-400 hover:border-primary hover:text-primary transition-all">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            class="w-8 h-8 flex items-center justify-center rounded-xl border border-gray-700 text-gray-400 hover:border-primary hover:text-primary transition-all">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7z" stroke="#1F915A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
           <button onclick="deleteEntry('${key}')"
-            class="w-8 h-8 flex items-center justify-center rounded-xl border border-gray-200 text-gray-400 hover:border-red-400 hover:text-red-400 transition-all">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M5 4V2.5h4V4M6 6.5v4M8 6.5v4M3 4l.7 7.5h6.6L11 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            class="w-8 h-8 flex items-center justify-center rounded-xl border border-gray-700 text-gray-400 hover:border-red-400 hover:text-red-400 transition-all">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M5 4V2.5h4V4M6 6.5v4M8 6.5v4M3 4l.7 7.5h6.6L11 4" stroke="#1F915A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         </div>`;
       container.appendChild(card);

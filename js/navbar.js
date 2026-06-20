@@ -33,10 +33,11 @@ const navHTML = `
   </div>
 
   <!-- User -->
-  <div class="flex items-center gap-3">
+  <a href="account.html" 
+    class="flex items-center gap-3">
     <span class="text-primary font-semibold text-sm" id="nav-username">Name</span>
     <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold" id="nav-avatar">N</div>
-  </div>
+  </a>
 
 </nav>`;
 

@@ -17,6 +17,10 @@ const TAG_STYLES = {
   Personal: 'bg-[#DBEAFE] text-[#1D4ED8]',
 };
 
+let viewYear, viewMonth, selectedKey;
+let currentUser = null;
+let cachedEntries = {}; // Pengganti getEntries() dari localStorage
+
 function moodSVG(m, size = 44) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="22" cy="22" r="20" stroke="${m.color}" stroke-width="2.2"/>
@@ -26,14 +30,11 @@ function moodSVG(m, size = 44) {
   </svg>`;
 }
 
-function getEntries() {
-  try { return JSON.parse(localStorage.getItem('mt_entries') || '{}'); }
-  catch { return {}; }
-}
+async function init() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { window.location.href = 'login.html'; return; }
+  currentUser = user;
 
-let viewYear, viewMonth, selectedKey;
-
-function init() {
   const now = new Date();
   viewYear  = now.getFullYear();
   viewMonth = now.getMonth();
@@ -51,23 +52,34 @@ function init() {
     renderCalendar();
   });
 
-  renderCalendar();
-  showDetail(selectedKey);
+  await loadEntriesFromCloud();
+}
+
+async function loadEntriesFromCloud() {
+  const { data, error } = await supabaseClient
+    .from('mood_entries')
+    .select('*')
+    .eq('user_id', currentUser.id);
+
+  if (!error) {
+    cachedEntries = {};
+    data.forEach(entry => { cachedEntries[entry.date] = entry; });
+    renderCalendar();
+    showDetail(selectedKey);
+  }
 }
 
 function renderCalendar() {
-  document.getElementById('month-label').textContent =
-    `${MONTH_NAMES[viewMonth]} ${viewYear}`;
+  document.getElementById('month-label').textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
 
-  const entries    = getEntries();
+  const entries    = cachedEntries; // Menggunakan data dari Cloud
   const grid       = document.getElementById('cal-grid');
   const today      = new Date().toISOString().split('T')[0];
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-  const startOffset = (new Date(viewYear, viewMonth, 1).getDay() + 6) % 7; // Mon = 0
+  const startOffset = (new Date(viewYear, viewMonth, 1).getDay() + 6) % 7;
 
   grid.innerHTML = '';
 
-  // Leading empty cells
   for (let i = 0; i < startOffset; i++) {
     grid.appendChild(document.createElement('div'));
   }
@@ -103,10 +115,8 @@ function renderCalendar() {
 }
 
 function showDetail(dateKey) {
-  const entries = getEntries();
-  const entry   = entries[dateKey];
+  const entry = cachedEntries[dateKey]; // Menggunakan data dari Cloud
 
-  // Parse date safely (avoid timezone shift)
   const [y, mo, d] = dateKey.split('-').map(Number);
   const date = new Date(y, mo - 1, d);
   document.getElementById('detail-date').textContent =

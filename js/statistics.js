@@ -9,6 +9,12 @@ const MOODS = [
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DAY_NAMES   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
+let currentView = 'month';
+let trendChart  = null;
+let mixChart    = null;
+let currentUser = null;
+let cachedEntries = {};
+
 function moodSVG(m, size = 44) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="22" cy="22" r="20" stroke="${m.color}" stroke-width="2.2"/>
@@ -18,19 +24,46 @@ function moodSVG(m, size = 44) {
   </svg>`;
 }
 
-function getEntries() {
-  try { return JSON.parse(localStorage.getItem('mt_entries') || '{}'); }
-  catch { return {}; }
+async function init() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { window.location.href = 'login.html'; return; }
+  currentUser = user;
+
+  await loadEntriesFromCloud();
+
+  document.querySelectorAll('.trend-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentView = btn.dataset.view;
+      document.querySelectorAll('.trend-btn').forEach(b => {
+        b.classList.remove('bg-primary', 'text-white');
+        b.classList.add('text-gray-500');
+      });
+      btn.classList.add('bg-primary', 'text-white');
+      btn.classList.remove('text-gray-500');
+      updateTrendChart();
+    });
+  });
+
+  initTrendChart();
+  initMixChart();
 }
 
-let currentView = 'month';
-let trendChart  = null;
-let mixChart    = null;
+async function loadEntriesFromCloud() {
+  const { data, error } = await supabaseClient
+    .from('mood_entries')
+    .select('*')
+    .eq('user_id', currentUser.id);
+
+  if (!error) {
+    cachedEntries = {};
+    data.forEach(entry => { cachedEntries[entry.date] = entry; });
+    renderSummary();
+  }
+}
 
 // ── Summary cards ──────────────────────────────────────────────────────────
-
 function renderSummary() {
-  const entries = getEntries();
+  const entries = cachedEntries;
   const all = Object.entries(entries);
 
   document.getElementById('stat-total').textContent = all.length;
@@ -57,9 +90,8 @@ function renderSummary() {
 }
 
 // ── Trend chart data builders ───────────────────────────────────────────────
-
 function getTrendData() {
-  const entries = getEntries();
+  const entries = cachedEntries;
   const now = new Date();
 
   if (currentView === 'week') {
@@ -116,7 +148,6 @@ function getTrendData() {
 }
 
 // ── Trend chart ─────────────────────────────────────────────────────────────
-
 function initTrendChart() {
   const { labels, data, colors } = getTrendData();
   const ctx = document.getElementById('trend-chart').getContext('2d');
@@ -187,7 +218,6 @@ function updateTrendChart() {
 }
 
 // ── Donut chart ─────────────────────────────────────────────────────────────
-
 const centerTextPlugin = {
   id: 'centerText',
   beforeDraw(chart) {
@@ -211,7 +241,7 @@ const centerTextPlugin = {
 };
 
 function initMixChart() {
-  const entries = getEntries();
+  const entries = cachedEntries;
   const counts  = MOODS.map(m => Object.values(entries).filter(e => e.mood === m.key).length);
   const total   = counts.reduce((a, b) => a + b, 0);
 
@@ -276,28 +306,6 @@ function renderMixLegend(counts, total) {
     ['great','good','neutral'].map(item).join('');
   document.getElementById('legend-right').innerHTML =
     ['sad','awful'].map(item).join('');
-}
-
-// ── Init ────────────────────────────────────────────────────────────────────
-
-function init() {
-  renderSummary();
-
-  document.querySelectorAll('.trend-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentView = btn.dataset.view;
-      document.querySelectorAll('.trend-btn').forEach(b => {
-        b.classList.remove('bg-primary', 'text-white');
-        b.classList.add('text-gray-500');
-      });
-      btn.classList.add('bg-primary', 'text-white');
-      btn.classList.remove('text-gray-500');
-      updateTrendChart();
-    });
-  });
-
-  initTrendChart();
-  initMixChart();
 }
 
 document.addEventListener('DOMContentLoaded', init);

@@ -16,6 +16,8 @@ let currentFilter = 'all';
 let currentSort   = 'newest';
 let editingKey    = null;
 let modalMood     = null;
+let currentUser   = null;
+let cachedEntries = {}; // Menyimpan data dari cloud sementara untuk UI
 
 function moodSVG(m, size = 44) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -26,12 +28,28 @@ function moodSVG(m, size = 44) {
   </svg>`;
 }
 
-function getEntries() {
-  try { return JSON.parse(localStorage.getItem('mt_entries') || '{}'); }
-  catch { return {}; }
+async function init() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { window.location.href = 'login.html'; return; }
+  currentUser = user;
+
+  buildFilterChips();
+  buildModalMoodRow();
+  await loadEntriesFromCloud();
 }
-function setEntries(obj) {
-  localStorage.setItem('mt_entries', JSON.stringify(obj));
+
+// ── MENGAMBIL DATA DARI CLOUD ──
+async function loadEntriesFromCloud() {
+  const { data, error } = await supabaseClient
+    .from('mood_entries')
+    .select('*')
+    .eq('user_id', currentUser.id);
+
+  if (!error) {
+    cachedEntries = {};
+    data.forEach(entry => { cachedEntries[entry.date] = entry; });
+    renderEntries();
+  }
 }
 
 function buildFilterChips() {
@@ -50,14 +68,8 @@ function setFilter(key) {
   currentFilter = key;
   document.querySelectorAll('.filter-chip').forEach(c => {
     const active = c.dataset.filter === key;
-    c.className = c.className
-      .replace(/border-primary|border-gray-200|text-primary|text-gray-500|bg-pink-bg|bg-white/g, '')
-      .trim();
-    c.classList.add(
-      ...(active
-        ? ['border-primary', 'text-primary', 'bg-pink-bg']
-        : ['border-gray-200', 'text-gray-500', 'bg-white'])
-    );
+    c.className = c.className.replace(/border-primary|border-gray-200|text-primary|text-gray-500|bg-pink-bg|bg-white/g, '').trim();
+    c.classList.add(...(active ? ['border-primary', 'text-primary', 'bg-pink-bg'] : ['border-gray-200', 'text-gray-500', 'bg-white']));
   });
   renderEntries();
 }
@@ -78,18 +90,13 @@ function setSort(dir) {
 }
 
 function renderEntries() {
-  const entries = getEntries();
   const search  = document.getElementById('search-input').value.toLowerCase();
-
-  let pairs = Object.entries(entries)
+  let pairs = Object.entries(cachedEntries)
     .filter(([, v]) => currentFilter === 'all' || v.mood === currentFilter)
     .filter(([, v]) => !search || (v.note || '').toLowerCase().includes(search));
 
-  pairs.sort(([a], [b]) => currentSort === 'newest'
-    ? b.localeCompare(a) : a.localeCompare(b));
-
-  document.getElementById('entries-count').textContent =
-    `${Object.keys(entries).length} entries total`;
+  pairs.sort(([a], [b]) => currentSort === 'newest' ? b.localeCompare(a) : a.localeCompare(b));
+  document.getElementById('entries-count').textContent = `${Object.keys(cachedEntries).length} entries total`;
 
   const container = document.getElementById('entries-container');
   container.innerHTML = '';
@@ -115,10 +122,9 @@ function renderEntries() {
     list.forEach(([key, val]) => {
       const m = MOODS.find(x => x.key === val.mood);
       if (!m) return;
-
-      const d       = new Date(key);
+      const d = new Date(key);
       const dateStr = d.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
-      const tags    = (val.tags || []).map(t => {
+      const tags = (val.tags || []).map(t => {
         const cls = TAG_STYLES[t] || 'bg-gray-100 text-gray-500';
         return `<span class="px-3 py-1 rounded-full text-[10px] font-semibold ${cls}">${t}</span>`;
       }).join('');
@@ -136,12 +142,10 @@ function renderEntries() {
           ${tags ? `<div class="flex gap-1.5 flex-wrap mt-1">${tags}</div>` : ''}
         </div>
         <div class="flex flex-col gap-1.5 shrink-0">
-          <button onclick="openEditModal('${key}')"
-            class="w-8 h-8 flex items-center justify-center rounded-xl border border-gray-700 text-gray-400 hover:border-primary hover:text-primary transition-all">
+          <button onclick="openEditModal('${key}')" class="w-8 h-8 flex items-center justify-center rounded-xl border border-gray-700 text-gray-400 hover:border-primary hover:text-primary transition-all">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7z" stroke="#1F915A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
-          <button onclick="deleteEntry('${key}')"
-            class="w-8 h-8 flex items-center justify-center rounded-xl border border-gray-700 text-gray-400 hover:border-red-400 hover:text-red-400 transition-all">
+          <button onclick="deleteEntry('${key}')" class="w-8 h-8 flex items-center justify-center rounded-xl border border-gray-700 text-gray-400 hover:border-red-400 hover:text-red-400 transition-all">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M5 4V2.5h4V4M6 6.5v4M8 6.5v4M3 4l.7 7.5h6.6L11 4" stroke="#1F915A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         </div>`;
@@ -150,11 +154,12 @@ function renderEntries() {
   });
 }
 
-function deleteEntry(key) {
-  const entries = getEntries();
-  delete entries[key];
-  setEntries(entries);
-  renderEntries();
+// ── HAPUS DATA DI CLOUD ──
+async function deleteEntry(key) {
+  const { error } = await supabaseClient.from('mood_entries').delete().match({ user_id: currentUser.id, date: key });
+  if (error) { showToast('Gagal menghapus data', true); return; }
+  
+  await loadEntriesFromCloud(); // Ambil ulang data
   showToast('Entry deleted');
 }
 
@@ -182,9 +187,7 @@ function selectModalMood(key) {
   });
 }
 
-function setToday() {
-  document.getElementById('modal-date').value = new Date().toISOString().split('T')[0];
-}
+function setToday() { document.getElementById('modal-date').value = new Date().toISOString().split('T')[0]; }
 
 function toggleTag(el) {
   const active = el.dataset.selected === 'true';
@@ -208,16 +211,12 @@ function resetModal() {
   });
 }
 
-function openModal() {
-  resetModal();
-  document.getElementById('modal-overlay').classList.remove('hidden');
-}
+function openModal() { resetModal(); document.getElementById('modal-overlay').classList.remove('hidden'); }
 
 function openEditModal(key) {
   resetModal();
   editingKey = key;
-  const entries = getEntries();
-  const val = entries[key];
+  const val = cachedEntries[key];
   if (!val) return;
 
   document.getElementById('modal-title').textContent = 'Edit Entry';
@@ -235,24 +234,34 @@ function openEditModal(key) {
   document.getElementById('modal-overlay').classList.remove('hidden');
 }
 
-function closeModal() {
-  document.getElementById('modal-overlay').classList.add('hidden');
-}
+function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
 
-function saveEntry() {
+// ── SIMPAN/UPDATE DATA KE CLOUD ──
+async function saveEntry() {
   if (!modalMood) { showToast('Please pick a mood first!', true); return; }
 
   const date = document.getElementById('modal-date').value;
   const note = document.getElementById('modal-note').value.trim();
   const tags = [...document.querySelectorAll('.modal-tag[data-selected="true"]')].map(t => t.dataset.tag);
 
-  const entries = getEntries();
-  if (editingKey && editingKey !== date) delete entries[editingKey];
-  entries[date] = { mood: modalMood, note, tags, time: new Date().toISOString() };
-  setEntries(entries);
+  // Jika user mengubah tanggal, hapus data di tanggal lama dulu
+  if (editingKey && editingKey !== date) {
+    await supabaseClient.from('mood_entries').delete().match({ user_id: currentUser.id, date: editingKey });
+  }
+
+  // Simpan/Timpa data ke database
+  const { error } = await supabaseClient.from('mood_entries').upsert({
+    user_id: currentUser.id,
+    date: date,
+    mood: modalMood,
+    note: note,
+    tags: tags
+  }, { onConflict: 'user_id,date' });
+
+  if (error) { showToast('Gagal menyimpan data', true); return; }
 
   closeModal();
-  renderEntries();
+  await loadEntriesFromCloud(); // Ambil ulang data yang paling update
   showToast(editingKey ? 'Entry updated!' : 'Entry saved!');
 }
 
@@ -269,10 +278,7 @@ function showToast(msg, warn = false) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  buildFilterChips();
-  buildModalMoodRow();
-  renderEntries();
-
+  init(); // Panggil fungsi init async yang baru
   document.getElementById('modal-overlay').addEventListener('click', e => {
     if (e.target === document.getElementById('modal-overlay')) closeModal();
   });

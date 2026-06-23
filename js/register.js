@@ -1,3 +1,4 @@
+// js/register.js
 document.addEventListener('DOMContentLoaded', async () => {
 
   /* ── PASSWORD VISIBILITY ── */
@@ -30,12 +31,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
+      // Mengirimkan data registrasi ke Supabase Cloud
       const { data, error } = await supabaseClient.auth.signUp({
         email,
         password,
         options: {
           data: {
-            full_name: fullName
+            full_name: fullName // Menyimpan nama lengkap ke dalam user metadata
           }
         }
       });
@@ -44,7 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       showMessage(
         'registerMessage',
-        'Account created successfully. Please check your email for verification.',
+        'Account created successfully! Please check your email for verification link.',
         false
       );
 
@@ -57,7 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 });
 
-/* ── HELPER ── */
+/* ── HELPER FUNCTIONS ── */
 function showMessage(elId, msg, isError) {
   const el = document.getElementById(elId);
   el.textContent = msg;
@@ -80,12 +82,10 @@ function setupToggle(btnId, inputId, iconId) {
     const icon = document.getElementById(iconId);
     if (icon) {
       icon.innerHTML = isHidden
-        ? /* eye-off */
-          `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+        ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
            <line x1="1" y1="1" x2="23" y2="23"/>`
-        : /* eye */
-          `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
            <circle cx="12" cy="12" r="3"/>`;
     }
   });

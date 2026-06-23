@@ -1,8 +1,17 @@
+// js/account.js
 let currentUser = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
-  currentUser = await requireAuth();
-  if (currentUser) loadAccount();
+  // Ambil data user aktif langsung dari sesi Supabase Cloud
+  const { data: { user }, error } = await supabaseClient.auth.getUser();
+  
+  if (error || !user) {
+    window.location.href = 'login.html'; // Proteksi halaman: tendang ke login jika belum auth
+    return;
+  }
+  
+  currentUser = user;
+  loadAccount();
 });
 
 function loadAccount() {
@@ -12,11 +21,19 @@ function loadAccount() {
     month: 'long', day: 'numeric', year: 'numeric'
   });
 
+  // Tampilkan data ke komponen teks header profil
   document.getElementById('accountName').textContent = fullName || email.split('@')[0];
   document.getElementById('accountEmail').textContent = email;
   document.getElementById('accountSince').textContent = `Member since ${joinDate}`;
-  document.getElementById('accountAvatar').textContent = '';
+  
+  // Mengisi avatar lingkaran besar dengan inisial nama huruf kapital
+  const avatarEl = document.getElementById('accountAvatar');
+  if (avatarEl) {
+    avatarEl.textContent = (fullName || email).charAt(0).toUpperCase();
+    avatarEl.className = "w-28 h-28 rounded-full bg-primary flex items-center justify-center text-white text-3xl font-bold flex-shrink-0";
+  }
 
+  // Isi default value pada form input edit profile
   document.getElementById('fullNameInput').value = fullName;
   document.getElementById('emailInput').value = email;
 }
@@ -26,7 +43,7 @@ function resetProfileForm() {
   document.getElementById('profileMessage').classList.add('hidden');
 }
 
-/* ── UPDATE PROFILE ── */
+/* ── UPDATE PROFILE VIA SUPABASE ── */
 document.getElementById('profileForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const newName = document.getElementById('fullNameInput').value.trim();
@@ -37,6 +54,7 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
   }
 
   try {
+    // Memperbarui meta_data full_name di server cloud
     const { error } = await supabaseClient.auth.updateUser({
       data: { full_name: newName }
     });
@@ -44,12 +62,24 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
 
     showMessage('profileMessage', 'Profile updated successfully.', false);
     document.getElementById('accountName').textContent = newName;
+    
+    // Perbarui state lokal agar data sinkron jika tombol 'cancel' diklik kemudian
+    currentUser.user_metadata.full_name = newName;
+    
+    // Sinkronisasi instan tampilan avatar dan nama di komponen navbar saat ini
+    const avatarEl = document.getElementById('accountAvatar');
+    if (avatarEl) avatarEl.textContent = newName.charAt(0).toUpperCase();
+    const navUsername = document.getElementById('nav-username');
+    if (navUsername) navUsername.textContent = newName;
+    const navAvatar = document.getElementById('nav-avatar');
+    if (navAvatar) navAvatar.textContent = newName.charAt(0).toUpperCase();
+
   } catch (err) {
     showMessage('profileMessage', err.message || 'Failed to update profile.', true);
   }
 });
 
-/* ── UPDATE PASSWORD ── */
+/* ── UPDATE PASSWORD VIA SUPABASE ── */
 document.getElementById('passwordForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const newPassword = document.getElementById('newPassword').value;
@@ -75,28 +105,37 @@ document.getElementById('passwordForm').addEventListener('submit', async (e) => 
   }
 });
 
-/* ── DELETE ACCOUNT ── */
+/* ── DELETE ACCOUNT MOOD HISTORY ── */
 function confirmDeleteAccount() {
   const sure = confirm('Are you sure? This will permanently delete your account and all mood entries. This cannot be undone.');
   if (sure) deleteAccount();
 }
 
 async function deleteAccount() {
-  // Catatan: hapus user dari auth.users butuh service_role key,
-  // yang TIDAK BOLEH dipakai di frontend. Idealnya ini lewat
-  // Supabase Edge Function. Untuk sementara, hapus data mood dulu
-  // lalu logout — proses hapus akun penuh perlu backend terpisah.
-
   try {
-    await supabaseClient.from('mood_entries').delete().eq('user_id', currentUser.id);
-    alert('Your mood data has been deleted. Contact admin to fully remove your account, or implement an Edge Function for full deletion.');
-    await signOut();
+    // Hapus semua baris data di tabel cloud milik user aktif
+    const { error } = await supabaseClient.from('mood_entries').delete().eq('user_id', currentUser.id);
+    if (error) throw error;
+    
+    alert('Your mood data has been deleted safely from cloud.');
+    await logout();
   } catch (err) {
     alert('Failed to delete data: ' + err.message);
   }
 }
 
-/* ── HELPER ── */
+/* ── LOG OUT FUNCTION ── */
+async function logout() {
+  try {
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) throw error;
+    window.location.href = 'login.html'; // Arahkan kembali ke login setelah session dihancurkan
+  } catch (err) {
+    alert('Logout failed: ' + err.message);
+  }
+}
+
+/* ── UI ALERTS HELPER ── */
 function showMessage(elId, msg, isError) {
   const el = document.getElementById(elId);
   el.textContent = msg;

@@ -7,7 +7,7 @@ const MOODS = [
 ];
 
 let selectedMood = null;
-const userName = 'Name';
+let currentUser = null; // Menyimpan data user yang sedang login
 
 function moodSVG(m, size = 44) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -18,18 +18,32 @@ function moodSVG(m, size = 44) {
   </svg>`;
 }
 
-function init() {
+async function init() {
+  // 1. Cek User Login
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) {
+    window.location.href = 'login.html'; // Lempar ke login kalau belum masuk
+    return;
+  }
+  currentUser = user;
+
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
 
+  // Ambil nama dari metadata Supabase
+  const userName = user.user_metadata?.full_name || user.email.split('@')[0];
+
   setText('log-date', dateStr);
   setText('log-title', `How are you feeling today, ${userName}?`);
 
   buildMoodButtons();
-  buildWeekGrid();
-  loadStats();
+  
+  // 2. Ambil data dari Supabase lalu render UI
+  const entries = await fetchEntries();
+  buildWeekGrid(entries);
+  loadStats(entries);
 }
 
 function setText(id, val) {
@@ -63,10 +77,10 @@ function selectMood(key) {
   });
 }
 
-function buildWeekGrid() {
+// UPDATE: Sekarang menerima data `entries` dari parameter
+function buildWeekGrid(entries) {
   const grid = document.getElementById('week-grid');
   if (!grid) return;
-  const entries = getEntries();
   const now = new Date();
   const dayOfWeek = (now.getDay() + 6) % 7;
   const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -96,8 +110,8 @@ function buildWeekGrid() {
   });
 }
 
-function loadStats() {
-  const entries = getEntries();
+// UPDATE: Sekarang menerima data `entries` dari parameter
+function loadStats(entries) {
   const now = new Date();
   const monthPrefix = now.toISOString().slice(0, 7);
   const monthly = Object.entries(entries).filter(([k]) => k.startsWith(monthPrefix));
@@ -122,18 +136,32 @@ function loadStats() {
     const topKey = Object.entries(freq).sort((a, b) => b[1] - a[1])[0][0];
     const topMood = MOODS.find(m => m.key === topKey);
     if (topMood) iconEl.innerHTML = moodSVG(topMood, 28);
+  } else if (iconEl) {
+    iconEl.innerHTML = ''; // Kosongkan jika belum ada data bulan ini
   }
 }
 
-function getEntries() {
-  try { return JSON.parse(localStorage.getItem('mt_entries') || '{}'); }
-  catch { return {}; }
-}
+// UPDATE: Ambil data dari Supabase dan ubah jadi format Object/Map seperti localStorage dulu
+async function fetchEntries() {
+  if (!currentUser) return {};
 
-function saveEntry(entry) {
-  const entries = getEntries();
-  entries[new Date().toISOString().split('T')[0]] = entry;
-  localStorage.setItem('mt_entries', JSON.stringify(entries));
+  const { data, error } = await supabaseClient
+    .from('mood_entries')
+    .select('*')
+    .eq('user_id', currentUser.id);
+
+  if (error) {
+    console.error('Error fetching entries:', error);
+    return {};
+  }
+
+  // Ubah array data jadi object dengan format { 'YYYY-MM-DD': { mood: '...', note: '...' } }
+  const formattedEntries = {};
+  data.forEach(entry => {
+    formattedEntries[entry.date] = entry;
+  });
+  
+  return formattedEntries;
 }
 
 function toggleTag(el) {
@@ -142,28 +170,51 @@ function toggleTag(el) {
   el.style.borderColor = !isSelected ? '#1F915A' : 'transparent';
 }
 
-function saveMood() {
+// UPDATE: Menyimpan data langsung ke Supabase (Upsert)
+async function saveMood() {
   if (!selectedMood) { showToast('⚠️ Please pick a mood first!', true); return; }
 
   const note = document.getElementById('note-input').value.trim();
   const tags = [...document.querySelectorAll('.tag[data-selected="true"]')].map(t => t.textContent.trim());
 
-  saveEntry({ mood: selectedMood, note, tags, time: new Date().toISOString() });
+  try {
+    const todayStr = new Date().toISOString().split('T')[0];
 
-  document.getElementById('note-input').value = '';
-  document.querySelectorAll('.tag').forEach(t => {
-    t.dataset.selected = 'false';
-    t.style.borderColor = 'transparent';
-  });
-  selectedMood = null;
-  document.querySelectorAll('#log-moods button').forEach(btn => {
-    btn.style.background = '';
-    btn.style.borderColor = 'transparent';
-  });
+    const { error } = await supabaseClient
+      .from('mood_entries')
+      .upsert({ 
+        user_id: currentUser.id,
+        date: todayStr,
+        mood: selectedMood,
+        note: note,
+        tags: tags
+      }, { onConflict: 'user_id,date' });
 
-  buildWeekGrid();
-  loadStats();
-  showToast('Mood saved! 🎉');
+    if (error) throw error;
+
+    // Reset Form UI
+    document.getElementById('note-input').value = '';
+    document.querySelectorAll('.tag').forEach(t => {
+      t.dataset.selected = 'false';
+      t.style.borderColor = 'transparent';
+    });
+    selectedMood = null;
+    document.querySelectorAll('#log-moods button').forEach(btn => {
+      btn.style.background = '';
+      btn.style.borderColor = 'transparent';
+    });
+
+    showToast('Mood saved to Cloud! 🎉');
+
+    // Render ulang grid dan statistik dengan data terbaru
+    const updatedEntries = await fetchEntries();
+    buildWeekGrid(updatedEntries);
+    loadStats(updatedEntries);
+
+  } catch (err) {
+    console.error(err);
+    showToast('⚠️ Gagal menyimpan data: ' + err.message, true);
+  }
 }
 
 function showToast(msg, warn = false) {

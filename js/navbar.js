@@ -48,10 +48,10 @@ if (!document.querySelector('link[href*="Poppins"]')) {
   document.head.appendChild(link);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('navbar').innerHTML = navHTML;
 
-  // Active link highlight
+  // Efek highlight untuk link halaman aktif
   const links = document.querySelectorAll('.nav-link');
   links.forEach(link => {
     const linkPath = link.getAttribute('href');
@@ -61,9 +61,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  if (user.name) {
-    document.getElementById('nav-username').textContent = user.name;
-    document.getElementById('nav-avatar').textContent = user.name.charAt(0).toUpperCase();
+  if (typeof supabaseClient !== 'undefined') {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (user) {
+      const name = user.user_metadata?.full_name || user.email.split('@')[0];
+      const navUsername = document.getElementById('nav-username');
+      const navAvatar = document.getElementById('nav-avatar');
+      
+      if (navUsername) navUsername.textContent = name;
+      if (navAvatar) navAvatar.textContent = name.charAt(0).toUpperCase();
+    }
   }
 });

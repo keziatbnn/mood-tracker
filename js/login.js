@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      // Autentikasi menggunakan email dan password ke Supabase
       const { data, error } = await supabaseClient.auth.signInWithPassword({
         email,
         password,

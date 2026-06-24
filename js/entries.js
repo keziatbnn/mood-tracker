@@ -187,7 +187,13 @@ function selectModalMood(key) {
   });
 }
 
-function setToday() { document.getElementById('modal-date').value = new Date().toISOString().split('T')[0]; }
+function setToday() { 
+  const todayStr = new Date().toISOString().split('T')[0];
+  const dateInput= document.getElementById('modal-date');
+
+  dateInput.value = todayStr;
+  dateInput.max   = todayStr;
+}
 
 function toggleTag(el) {
   const active = el.dataset.selected === 'true';
@@ -241,6 +247,10 @@ async function saveEntry() {
   if (!modalMood) { showToast('Please pick a mood first!', true); return; }
 
   const date = document.getElementById('modal-date').value;
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  if (!date || date > todayStr) { showToast('You cannot select a future date!', true); return; }
+  
   const note = document.getElementById('modal-note').value.trim();
   const tags = [...document.querySelectorAll('.modal-tag[data-selected="true"]')].map(t => t.dataset.tag);
 

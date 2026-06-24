@@ -7,50 +7,50 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="../js/tailwind.config.js"></script>
 </head>
-<body class="bg-page-bg font-sans">
+<body class="bg-page-bg font-sans overflow-x-hidden">
 
   <div id="navbar"></div>
 
-  <main class="px-14 py-10 min-h-[calc(100vh-64px)]">
+  <main class="px-6 py-8 lg:px-14 lg:py-10 min-h-[calc(100vh-64px)]">
 
-    <!-- Section Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
         <h1 class="text-2xl font-bold text-primary">Mood Entries</h1>
         <p class="text-xs text-gray-400 mt-0.5" id="entries-count">0 entries total</p>
       </div>
       <button onclick="openModal()"
-        class="px-5 py-2.5 rounded-full bg-pink-bg text-primary text-sm font-bold hover:bg-pink-300 transition-all hover:-translate-y-0.5">
+        class="w-full sm:w-auto px-5 py-2.5 rounded-full bg-pink-bg text-primary text-sm font-bold hover:bg-pink-300 transition-all hover:-translate-y-0.5">
         + Add Entry
       </button>
     </div>
 
-    <!-- Search + Sort -->
-    <div class="flex items-center gap-3 mb-5">
-      <div class="flex items-center gap-2 flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5">
+    <div class="flex flex-col md:flex-row md:items-center gap-3 mb-5">
+      
+      <div class="flex items-center gap-2 flex-1 w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-gray-400 shrink-0">
           <circle cx="7" cy="7" r="5.5" stroke="#9CA3AF" stroke-width="1.5"/>
           <path d="M11 11L14 14" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
         <input id="search-input" type="text" placeholder="Search notes…"
-          class="flex-1 text-sm text-gray-700 bg-transparent focus:outline-none placeholder-gray-300 font-[Poppins]"
+          class="flex-1 w-full text-sm text-gray-700 bg-transparent focus:outline-none placeholder-gray-300 font-[Poppins]"
           oninput="renderEntries()" />
       </div>
-      <div class="flex gap-2">
+
+      <div class="flex gap-2 w-full md:w-auto">
         <button id="btn-newest" onclick="setSort('newest')"
-          class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border-2 text-xs font-semibold transition-all sort-btn border-primary text-primary bg-pink-bg">
+          class="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border-2 text-xs font-semibold transition-all sort-btn border-primary text-primary bg-pink-bg">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M4 7h6M6 10h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           Newest
         </button>
         <button id="btn-oldest" onclick="setSort('oldest')"
-          class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border-2 text-xs font-semibold transition-all sort-btn border-gray-200 text-gray-400 bg-white hover:border-primary hover:text-primary">
+          class="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border-2 text-xs font-semibold transition-all sort-btn border-gray-200 text-gray-400 bg-white hover:border-primary hover:text-primary">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 10h10M4 7h6M6 4h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           Oldest
         </button>
       </div>
+
     </div>
 
-    <!-- Mood Filter -->
     <div class="flex gap-2 flex-wrap mb-6" id="mood-filters">
       <button onclick="setFilter('all')" data-filter="all"
         class="filter-chip px-4 py-1.5 rounded-full text-xs font-semibold border-2 transition-all border-primary bg-pink-bg text-primary">
@@ -58,20 +58,17 @@
       </button>
     </div>
 
-    <!-- Month Label + Entry List -->
     <div id="entries-container"></div>
 
   </main>
 
-  <!-- ── ADD / EDIT MODAL ── -->
   <div id="modal-overlay"
-    class="fixed inset-0 bg-black/30 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-7 flex flex-col gap-5">
+    class="fixed inset-0 bg-black/30 flex items-center justify-center z-50 hidden px-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 sm:p-7 flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
       <h2 class="text-lg font-bold text-primary" id="modal-title">Add Entry</h2>
 
-      <!-- Date row -->
-      <div class="flex items-center gap-3">
-        <div class="flex items-center gap-2 bg-pink-bg rounded-xl px-4 py-2.5 flex-1">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="flex items-center gap-2 bg-pink-bg rounded-xl px-4 py-2.5 w-full">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="text-primary shrink-0">
             <rect x="2" y="3" width="12" height="11" rx="2" stroke="#1F915A" stroke-width="1.5"/>
             <path d="M5 1v3M11 1v3M2 7h12" stroke="#1F915A" stroke-width="1.5" stroke-linecap="round"/>
@@ -80,18 +77,16 @@
             class="bg-transparent text-sm font-semibold text-gray-700 focus:outline-none w-full font-[Poppins]"/>
         </div>
         <button onclick="setToday()"
-          class="px-4 py-2.5 rounded-xl border-2 border-primary text-primary text-xs font-bold hover:bg-pink-bg transition-all">
+          class="w-full sm:w-auto px-4 py-2.5 rounded-xl border-2 border-primary text-primary text-xs font-bold hover:bg-pink-bg transition-all shrink-0">
           Today
         </button>
       </div>
 
-      <!-- Mood picker -->
       <div>
         <label class="text-xs font-semibold text-gray-600 block mb-3">How are you feeling?</label>
-        <div class="flex gap-2 justify-between" id="modal-mood-row"></div>
+        <div class="flex gap-1 sm:gap-2 justify-between flex-wrap" id="modal-mood-row"></div>
       </div>
 
-      <!-- Note -->
       <div>
         <label class="text-xs font-semibold text-gray-600 block mb-2">Note (optional)</label>
         <textarea id="modal-note" placeholder="What's on your mind?"
@@ -99,7 +94,6 @@
         </textarea>
       </div>
 
-      <!-- Tags -->
       <div>
         <label class="text-xs font-semibold text-gray-600 block mb-2">Tags</label>
         <div class="flex gap-2 flex-wrap" id="modal-tags">
@@ -134,7 +128,7 @@
   <div id="toast"
     class="fixed bottom-8 left-1/2 -translate-x-1/2 translate-y-16 opacity-0 pointer-events-none
            bg-primary text-white px-8 py-3 rounded-full text-sm font-semibold shadow-lg
-           transition-all duration-300 z-50">
+           transition-all duration-300 z-50 w-11/12 max-w-sm text-center">
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

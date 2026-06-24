@@ -1,7 +1,6 @@
 const navHTML = `
-<nav class="bg-pink-bg border-b border-nav-border px-8 flex items-center h-16 gap-8">
+<nav class="w-full bg-pink-bg border-b border-nav-border px-6 lg:px-8 py-3 lg:py-0 lg:h-16 flex flex-wrap items-center justify-between relative z-50">
 
-  <!-- Brand -->
   <a href="home.html" class="flex items-center gap-2 no-underline">
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="14" cy="14" r="13" stroke="#1F915A" stroke-width="1.5"/>
@@ -12,35 +11,38 @@ const navHTML = `
     <span class="text-primary font-bold text-xl tracking-tight">MoodTracker</span>
   </a>
 
-  <!-- Nav links -->
-  <div class="flex gap-2 flex-1 justify-center">
-    <a href="home.html"
-       class="nav-link px-5 py-2 rounded-2xl text-primary font-medium text-sm no-underline hover:bg-primary-light transition-colors">
-      Home
+  <button id="mobile-menu-btn" class="lg:hidden text-primary hover:opacity-75 focus:outline-none p-1">
+    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+    </svg>
+  </button>
+
+  <div id="nav-content" class="hidden w-full lg:flex lg:flex-1 lg:w-auto lg:items-center lg:justify-between flex-col lg:flex-row gap-4 lg:gap-2 mt-4 lg:mt-0 pb-4 lg:pb-0">
+    
+    <div class="flex gap-2 flex-col lg:flex-row lg:flex-1 lg:justify-center">
+      <a href="home.html" class="nav-link px-5 py-2 rounded-2xl text-primary font-medium text-sm no-underline hover:bg-white lg:hover:bg-primary-light transition-colors text-center">
+        Home
+      </a>
+      <a href="entries.html" class="nav-link px-5 py-2 rounded-2xl text-primary font-medium text-sm no-underline hover:bg-white lg:hover:bg-primary-light transition-colors text-center">
+        Entries
+      </a>
+      <a href="calendar.html" class="nav-link px-5 py-2 rounded-2xl text-primary font-medium text-sm no-underline hover:bg-white lg:hover:bg-primary-light transition-colors text-center">
+        Calendar
+      </a>
+      <a href="statistics.html" class="nav-link px-5 py-2 rounded-2xl text-primary font-medium text-sm no-underline hover:bg-white lg:hover:bg-primary-light transition-colors text-center">
+        Statistic
+      </a>
+    </div>
+
+    <a href="account.html" class="flex items-center justify-center lg:justify-start gap-3 mt-2 lg:mt-0 pt-4 lg:pt-0 border-t border-[#1F915A20] lg:border-none">
+      <span class="text-primary font-semibold text-sm" id="nav-username">Name</span>
+      <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold" id="nav-avatar">N</div>
     </a>
-    <a href="entries.html"
-       class="nav-link px-5 py-2 rounded-2xl text-primary font-medium text-sm no-underline hover:bg-primary-light transition-colors">
-      Entries
-    </a>
-    <a href="calendar.html"
-       class="nav-link px-5 py-2 rounded-2xl text-primary font-medium text-sm no-underline hover:bg-primary-light transition-colors">
-      Calendar
-    </a>
-    <a href="statistics.html"
-       class="nav-link px-5 py-2 rounded-2xl text-primary font-medium text-sm no-underline hover:bg-primary-light transition-colors">
-      Statistic
-    </a>
+    
   </div>
-
-  <!-- User -->
-  <a href="account.html" 
-    class="flex items-center gap-3">
-    <span class="text-primary font-semibold text-sm" id="nav-username">Name</span>
-    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold" id="nav-avatar">N</div>
-  </a>
-
 </nav>`;
 
+// Load Poppins Font
 if (!document.querySelector('link[href*="Poppins"]')) {
   const link = document.createElement('link');
   link.rel = 'stylesheet';
@@ -50,6 +52,17 @@ if (!document.querySelector('link[href*="Poppins"]')) {
 
 document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('navbar').innerHTML = navHTML;
+
+  // Logika interaksi Hamburger Menu untuk Mobile
+  const menuBtn = document.getElementById('mobile-menu-btn');
+  const navContent = document.getElementById('nav-content');
+  
+  if (menuBtn && navContent) {
+    menuBtn.addEventListener('click', () => {
+      navContent.classList.toggle('hidden');
+      navContent.classList.toggle('flex');
+    });
+  }
 
   // Efek highlight untuk link halaman aktif
   const links = document.querySelectorAll('.nav-link');
@@ -61,6 +74,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // Fetch data user dari Supabase
   if (typeof supabaseClient !== 'undefined') {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (user) {

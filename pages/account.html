@@ -7,31 +7,29 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="../js/tailwind.config.js"></script>
 </head>
-<body class="bg-page-bg font-sans">
+<body class="bg-page-bg font-sans overflow-x-hidden">
 
   <div id="navbar"></div>
 
-  <div class="min-h-[calc(100vh-64px)] flex justify-center px-6 py-12">
+  <div class="min-h-[calc(100vh-64px)] flex justify-center px-4 sm:px-6 py-8 sm:py-12">
     <div class="w-full max-w-3xl flex flex-col gap-6">
 
       <div>
-        <h1 class="text-3xl font-bold text-primary">My Account</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-primary">My Account</h1>
         <p class="text-sm text-gray-400 mt-1">Manage your profile and account information</p>
       </div>
 
-      <!-- Profile header -->
-      <div class="bg-white border border-gray-100 rounded-2xl p-8 flex items-center gap-6">
-        <div class="w-28 h-28 rounded-full bg-gray-200 flex-shrink-0" id="accountAvatar"></div>
+      <div class="bg-white border border-gray-100 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center text-center sm:text-left gap-4 sm:gap-6">
+        <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gray-200 flex-shrink-0" id="accountAvatar"></div>
         <div>
-          <p class="text-2xl font-bold text-gray-900" id="accountName">Name LastName</p>
-          <p class="text-base text-gray-500 mt-1" id="accountEmail">name@gmail.com</p>
-          <p class="text-sm text-gray-400 mt-2" id="accountSince">Member since —</p>
+          <p class="text-xl sm:text-2xl font-bold text-gray-900" id="accountName">Name LastName</p>
+          <p class="text-sm sm:text-base text-gray-500 mt-1" id="accountEmail">name@gmail.com</p>
+          <p class="text-xs sm:text-sm text-gray-400 mt-2" id="accountSince">Member since —</p>
         </div>
       </div>
 
-      <!-- Edit profile -->
-      <div class="bg-white border border-gray-100 rounded-2xl p-8">
-        <p class="text-sm font-bold text-primary tracking-wide mb-5">EDIT PROFILE</p>
+      <div class="bg-white border border-gray-100 rounded-2xl p-6 sm:p-8">
+        <p class="text-xs sm:text-sm font-bold text-primary tracking-wide mb-5">EDIT PROFILE</p>
 
         <div id="profileMessage" class="hidden text-sm rounded-xl px-4 py-3 mb-4"></div>
 
@@ -48,22 +46,21 @@
               class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-100 text-sm text-gray-400 font-[Poppins]" />
           </div>
 
-          <div class="flex gap-3">
+          <div class="flex flex-col sm:flex-row gap-3">
             <button type="submit"
-              class="px-6 py-2.5 rounded-xl border border-gray-300 text-sm font-bold text-gray-800 hover:bg-gray-50 transition-all">
+              class="w-full sm:w-auto px-6 py-2.5 rounded-xl border border-gray-300 text-sm font-bold text-gray-800 hover:bg-gray-50 transition-all">
               Save Changes
             </button>
             <button type="button" onclick="resetProfileForm()"
-              class="px-6 py-2.5 rounded-xl border border-gray-300 text-sm font-bold text-gray-800 hover:bg-gray-50 transition-all">
+              class="w-full sm:w-auto px-6 py-2.5 rounded-xl border border-gray-300 text-sm font-bold text-gray-800 hover:bg-gray-50 transition-all">
               Cancel
             </button>
           </div>
         </form>
       </div>
 
-      <!-- Change password -->
-      <div class="bg-white border border-gray-100 rounded-2xl p-8">
-        <p class="text-sm font-bold text-primary tracking-wide mb-5">CHANGE PASSWORD</p>
+      <div class="bg-white border border-gray-100 rounded-2xl p-6 sm:p-8">
+        <p class="text-xs sm:text-sm font-bold text-primary tracking-wide mb-5">CHANGE PASSWORD</p>
 
         <div id="passwordMessage" class="hidden text-sm rounded-xl px-4 py-3 mb-4"></div>
 
@@ -82,32 +79,30 @@
 
           <div>
             <button type="submit"
-              class="px-6 py-2.5 rounded-xl border border-gray-300 text-sm font-bold text-gray-800 hover:bg-gray-50 transition-all">
+              class="w-full sm:w-auto px-6 py-2.5 rounded-xl border border-gray-300 text-sm font-bold text-gray-800 hover:bg-gray-50 transition-all">
               Update Password
             </button>
           </div>
         </form>
       </div>
 
-      <!-- Delete account -->
-      <div class="bg-white border border-red-100 rounded-2xl p-8">
-        <p class="text-sm font-bold text-red-500 tracking-wide mb-3">DELETE ACCOUNT</p>
+      <div class="bg-white border border-red-100 rounded-2xl p-6 sm:p-8">
+        <p class="text-xs sm:text-sm font-bold text-red-500 tracking-wide mb-3">DELETE ACCOUNT</p>
         <p class="text-sm text-gray-400 leading-relaxed mb-5">
           This action will permanently delete your account and all your mood history. It cannot be undone.
         </p>
         <button onclick="confirmDeleteAccount()"
-          class="px-6 py-2.5 rounded-xl border border-gray-300 text-sm font-bold text-gray-800 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all">
+          class="w-full sm:w-auto px-6 py-2.5 rounded-xl border border-gray-300 text-sm font-bold text-gray-800 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all">
           Delete My Account
         </button>
       </div>
 
-      <!-- Log Out -->
-       <div class="">
+      <div>
         <button onclick="logout()"
           class="w-full px-6 py-2.5 rounded-xl border border-gray-300 text-sm font-bold text-gray-800 hover:bg-yellow-50 hover:border-yellow-200 hover:text-yellow-600 transition-all">
           Log Out
         </button>
-       </div>
+      </div>
 
     </div>
   </div>

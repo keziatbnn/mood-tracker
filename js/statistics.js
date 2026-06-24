@@ -177,7 +177,7 @@ function initTrendChart() {
         y: {
           min: 0, max: 5.5,
           ticks: { stepSize: 1, color: '#bbb', font: { family: 'Poppins', size: 11 }, callback: val => (val >= 1 && val <= 5) ? val : '' },
-          grid: { color: ctx => ctx.tick.value === 0 ? 'transparent' : 'rgba(0,0,0,0.06)' },
+          grid: { color: ctx => (ctx.tick.value < 1 || ctx.tick.value > 5) ? 'transparent' : 'rgba(0,0,0,0.06)' },
           border: { display: false },
         },
         x: {

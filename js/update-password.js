@@ -1,28 +1,27 @@
 document
-  .getElementById('updatePasswordForm')
-  .addEventListener('submit', async (e) => {
+.getElementById('updatePasswordForm')
+.addEventListener('submit', async (e) => {
 
-    e.preventDefault();
+```
+e.preventDefault();
 
-    const password =
-      document.getElementById('newPassword').value;
+const newPassword =
+  document.getElementById('newPassword').value;
 
-    const { error } =
-      await supabaseClient.auth.updateUser({
-        password
-      });
+const { data, error } =
+  await supabaseClient.auth.updateUser({
+    password: newPassword
+  });
 
-    if (error) {
+if (error) {
+  console.error(error);
+  alert(error.message);
+  return;
+}
 
-      alert(error.message);
+alert('Password berhasil diubah');
 
-    } else {
-
-      alert('Password berhasil diubah');
-
-      window.location.href =
-        'login.html';
-
-    }
+window.location.href = 'login.html';
+```
 
 });

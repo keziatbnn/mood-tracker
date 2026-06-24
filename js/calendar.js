@@ -11,12 +11,6 @@ const MONTH_NAMES = [
   'July','August','September','October','November','December'
 ];
 
-const TAG_STYLES = {
-  College:  'bg-[#d4f0e2] text-[#1a7a42]',
-  Work:     'bg-[#ffe5cc] text-[#b85e00]',
-  Personal: 'bg-[#DBEAFE] text-[#1D4ED8]',
-};
-
 let viewYear, viewMonth, selectedKey;
 let currentUser = null;
 let cachedEntries = {}; // Pengganti getEntries() dari localStorage
@@ -34,6 +28,7 @@ async function init() {
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) { window.location.href = 'login.html'; return; }
   currentUser = user;
+  await loadCustomTags(currentUser.id);
 
   const now = new Date();
   viewYear  = now.getFullYear();
@@ -148,8 +143,8 @@ function showDetail(dateKey) {
 
   const tagsEl = document.getElementById('detail-tags');
   tagsEl.innerHTML = (entry.tags || [])
-    .map(t => `<span class="px-4 py-1.5 rounded-full text-xs font-semibold ${TAG_STYLES[t] || 'bg-gray-100 text-gray-600'}">${t}</span>`)
-    .join('');
+  .map(t => renderTagPill(t))
+  .join('');
 }
 
 document.addEventListener('DOMContentLoaded', init);

@@ -6,12 +6,6 @@ const MOODS = [
   { key: 'great',   label: 'Great',   color: '#1F915A', mouth: 'M13 27 Q22 36 31 27'  },
 ];
 
-const TAG_STYLES = {
-  College: 'bg-[#d4f0e2] text-[#1a7a42]',
-  Work:    'bg-[#ffe5cc] text-[#b85e00]',
-  Personal:'bg-[#DBEAFE] text-[#1D4ED8]',
-};
-
 let currentFilter = 'all';
 let currentSort   = 'newest';
 let editingKey    = null;
@@ -34,6 +28,9 @@ async function init() {
   currentUser = user;
 
   buildFilterChips();
+
+  // Load custom tags FIRST, then build modal mood row + entries
+  await loadCustomTags(currentUser.id);
   buildModalMoodRow();
   await loadEntriesFromCloud();
 }
@@ -47,7 +44,7 @@ async function loadEntriesFromCloud() {
 
   if (!error) {
     cachedEntries = {};
-    data.forEach(entry => { cachedEntries[entry.date] = entry; });
+    data.forEach(e => { cachedEntries[e.date] = e; });
     renderEntries();
   }
 }
@@ -57,9 +54,9 @@ function buildFilterChips() {
   MOODS.forEach(m => {
     const btn = document.createElement('button');
     btn.dataset.filter = m.key;
-    btn.onclick = () => setFilter(m.key);
-    btn.className = 'filter-chip px-4 py-1.5 rounded-full text-xs font-semibold border-2 transition-all flex items-center gap-1.5 border-gray-200 text-gray-500 bg-white hover:border-primary hover:text-primary';
-    btn.innerHTML = `<span style="width:16px;height:16px;display:inline-block">${moodSVG(m, 16)}</span><span>${m.label}</span>`;
+    btn.onclick        = () => setFilter(m.key);
+    btn.className      = 'filter-chip px-4 py-1.5 rounded-full text-xs font-semibold border-2 transition-all flex items-center gap-1.5 border-gray-200 text-gray-500 bg-white hover:border-primary hover:text-primary';
+    btn.innerHTML      = `<span style="width:16px;height:16px;display:inline-block">${moodSVG(m, 16)}</span><span>${m.label}</span>`;
     container.appendChild(btn);
   });
 }
@@ -68,8 +65,10 @@ function setFilter(key) {
   currentFilter = key;
   document.querySelectorAll('.filter-chip').forEach(c => {
     const active = c.dataset.filter === key;
-    c.className = c.className.replace(/border-primary|border-gray-200|text-primary|text-gray-500|bg-pink-bg|bg-white/g, '').trim();
-    c.classList.add(...(active ? ['border-primary', 'text-primary', 'bg-pink-bg'] : ['border-gray-200', 'text-gray-500', 'bg-white']));
+    c.className  = c.className.replace(/border-primary|border-gray-200|text-primary|text-gray-500|bg-pink-bg|bg-white/g, '').trim();
+    c.classList.add(...(active
+      ? ['border-primary', 'text-primary', 'bg-pink-bg']
+      : ['border-gray-200', 'text-gray-500', 'bg-white']));
   });
   renderEntries();
 }
@@ -90,7 +89,7 @@ function setSort(dir) {
 }
 
 function renderEntries() {
-  const search  = document.getElementById('search-input').value.toLowerCase();
+  const search = document.getElementById('search-input').value.toLowerCase();
   let pairs = Object.entries(cachedEntries)
     .filter(([, v]) => currentFilter === 'all' || v.mood === currentFilter)
     .filter(([, v]) => !search || (v.note || '').toLowerCase().includes(search));
@@ -114,7 +113,7 @@ function renderEntries() {
   });
 
   Object.entries(groups).forEach(([month, list]) => {
-    const label = new Date(month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const label    = new Date(month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     const monthDiv = document.createElement('div');
     monthDiv.innerHTML = `<p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-4">${label}</p>`;
     container.appendChild(monthDiv);
@@ -122,12 +121,11 @@ function renderEntries() {
     list.forEach(([key, val]) => {
       const m = MOODS.find(x => x.key === val.mood);
       if (!m) return;
-      const d = new Date(key);
+      const d       = new Date(key);
       const dateStr = d.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
-      const tags = (val.tags || []).map(t => {
-        const cls = TAG_STYLES[t] || 'bg-gray-100 text-gray-500';
-        return `<span class="px-3 py-1 rounded-full text-[10px] font-semibold ${cls}">${t}</span>`;
-      }).join('');
+
+      // Build tag pills using shared helper (respects custom tag colours)
+      const tags = (val.tags || []).map(t => renderTagPill(t)).join('');
 
       const card = document.createElement('div');
       card.className = 'flex items-center gap-4 bg-pink-bg border border-gray-700 rounded-2xl px-5 py-4 mb-3 hover:shadow-sm transition-all';
@@ -156,9 +154,12 @@ function renderEntries() {
 
 // ── HAPUS DATA DI CLOUD ──
 async function deleteEntry(key) {
-  const { error } = await supabaseClient.from('mood_entries').delete().match({ user_id: currentUser.id, date: key });
-  if (error) { showToast('Gagal menghapus data', true); return; }
-  
+  const { error } = await supabaseClient
+    .from('mood_entries')
+    .delete()
+    .match({ user_id: currentUser.id, date: key });
+
+  if (error) { showToast('Failed to delete entry', true); return; }
   await loadEntriesFromCloud(); // Ambil ulang data
   showToast('Entry deleted');
 }
@@ -169,8 +170,8 @@ function buildModalMoodRow() {
   MOODS.forEach(m => {
     const btn = document.createElement('button');
     btn.dataset.mood = m.key;
-    btn.className = 'flex flex-col items-center gap-1.5 cursor-pointer bg-transparent border-2 border-transparent px-2 py-2 rounded-2xl transition-all hover:bg-black/5';
-    btn.innerHTML = `<span style="width:32px;height:32px;display:block">${moodSVG(m, 32)}</span>
+    btn.className    = 'flex flex-col items-center gap-1.5 cursor-pointer bg-transparent border-2 border-transparent px-2 py-2 rounded-2xl transition-all hover:bg-black/5';
+    btn.innerHTML    = `<span style="width:32px;height:32px;display:block">${moodSVG(m, 32)}</span>
       <span class="text-[10px] font-semibold" style="color:${m.color}">${m.label}</span>`;
     btn.addEventListener('click', () => selectModalMood(m.key));
     row.appendChild(btn);
@@ -187,18 +188,21 @@ function selectModalMood(key) {
   });
 }
 
-function setToday() { 
-  const todayStr = new Date().toISOString().split('T')[0];
-  const dateInput= document.getElementById('modal-date');
-
-  dateInput.value = todayStr;
-  dateInput.max   = todayStr;
+function refreshModalTags(preselected = []) {
+  const container = document.getElementById('modal-tag-container');
+  if (!container) return;
+  renderTagSection(container, preselected, currentUser.id, () => {
+    // Keep current selection when a tag is created/deleted
+    const sel = getSelectedTags(container);
+    refreshModalTags(sel);
+  });
 }
 
-function toggleTag(el) {
-  const active = el.dataset.selected === 'true';
-  el.dataset.selected = String(!active);
-  el.style.borderColor = !active ? '#1F915A' : 'transparent';
+function setToday() {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const el       = document.getElementById('modal-date');
+  el.value = todayStr;
+  el.max   = todayStr;
 }
 
 function resetModal() {
@@ -211,64 +215,63 @@ function resetModal() {
     btn.style.background  = '';
     btn.style.borderColor = 'transparent';
   });
-  document.querySelectorAll('.modal-tag').forEach(t => {
-    t.dataset.selected = 'false';
-    t.style.borderColor = 'transparent';
-  });
+  refreshModalTags([]);
 }
 
-function openModal() { resetModal(); document.getElementById('modal-overlay').classList.remove('hidden'); }
+function openModal() {
+  resetModal();
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
 
 function openEditModal(key) {
   resetModal();
   editingKey = key;
-  const val = cachedEntries[key];
+  const val  = cachedEntries[key];
   if (!val) return;
 
   document.getElementById('modal-title').textContent = 'Edit Entry';
   document.getElementById('modal-date').value        = key;
   document.getElementById('modal-note').value        = val.note || '';
   if (val.mood) selectModalMood(val.mood);
-  if (val.tags) {
-    document.querySelectorAll('.modal-tag').forEach(t => {
-      if (val.tags.includes(t.dataset.tag)) {
-        t.dataset.selected  = 'true';
-        t.style.borderColor = '#1F915A';
-      }
-    });
-  }
+  refreshModalTags(val.tags || []);
   document.getElementById('modal-overlay').classList.remove('hidden');
 }
 
-function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+function closeModal() {
+  document.getElementById('modal-overlay').classList.add('hidden');
+}
 
 // ── SIMPAN/UPDATE DATA KE CLOUD ──
 async function saveEntry() {
   if (!modalMood) { showToast('Please pick a mood first!', true); return; }
 
-  const date = document.getElementById('modal-date').value;
+  const date     = document.getElementById('modal-date').value;
   const todayStr = new Date().toISOString().split('T')[0];
-
   if (!date || date > todayStr) { showToast('You cannot select a future date!', true); return; }
-  
+
   const note = document.getElementById('modal-note').value.trim();
-  const tags = [...document.querySelectorAll('.modal-tag[data-selected="true"]')].map(t => t.dataset.tag);
+  const tags = getSelectedTags(document.getElementById('modal-tag-container'));
 
   // Jika user mengubah tanggal, hapus data di tanggal lama dulu
   if (editingKey && editingKey !== date) {
-    await supabaseClient.from('mood_entries').delete().match({ user_id: currentUser.id, date: editingKey });
+    await supabaseClient
+      .from('mood_entries')
+      .delete()
+      .match({ user_id: currentUser.id, date: editingKey });
   }
 
   // Simpan/Timpa data ke database
-  const { error } = await supabaseClient.from('mood_entries').upsert({
-    user_id: currentUser.id,
-    date: date,
-    mood: modalMood,
-    note: note,
-    tags: tags
-  }, { onConflict: 'user_id,date' });
+  const { error } = await supabaseClient
+    .from('mood_entries')
+    .upsert({
+      user_id: currentUser.id,
+      date:    date,
+      mood:    modalMood,
+      note:    note,
+      tags:    tags,
+    }, { onConflict: 'user_id,date' });
 
-  if (error) { showToast('Gagal menyimpan data', true); return; }
+  if (error) { showToast('Failed to save entry', true); return; }
 
   closeModal();
   await loadEntriesFromCloud(); // Ambil ulang data yang paling update
@@ -277,7 +280,7 @@ async function saveEntry() {
 
 function showToast(msg, warn = false) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
+  t.textContent      = msg;
   t.style.background = warn ? '#e07b30' : '#1F915A';
   t.classList.remove('translate-y-16', 'opacity-0');
   t.classList.add('translate-y-0', 'opacity-100');

@@ -7,7 +7,7 @@ const MOODS = [
 ];
 
 let selectedMood = null;
-let currentUser = null; // Menyimpan data user yang sedang login
+let currentUser  = null; // Menyimpan data user yang sedang login
 
 function moodSVG(m, size = 44) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -21,17 +21,12 @@ function moodSVG(m, size = 44) {
 async function init() {
   // 1. Cek User Login
   const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) {
-    window.location.href = 'login.html'; // Lempar ke login kalau belum masuk
-    return;
-  }
+  if (!user) { window.location.href = 'login.html'; return; }
   currentUser = user;
 
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-  });
-
+  const now     = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  
   // Ambil nama dari metadata Supabase
   const userName = user.user_metadata?.full_name || user.email.split('@')[0];
 
@@ -39,11 +34,25 @@ async function init() {
   setText('log-title', `How are you feeling today, ${userName}?`);
 
   buildMoodButtons();
-  
+
+  // Load custom tags then render tag section
+  await loadCustomTags(currentUser.id);
+  refreshTagSection();
+
   // 2. Ambil data dari Supabase lalu render UI
   const entries = await fetchEntries();
   buildWeekGrid(entries);
   loadStats(entries);
+}
+
+/* ── Tag section ── */
+function refreshTagSection() {
+  const container = document.getElementById('home-tag-container');
+  if (!container) return;
+  const selected = getSelectedTags(container);
+  renderTagSection(container, selected, currentUser.id, () => {
+    refreshTagSection();
+  });
 }
 
 function setText(id, val) {
@@ -72,7 +81,7 @@ function selectMood(key) {
   const mood = MOODS.find(m => m.key === key);
   document.querySelectorAll('#log-moods button').forEach(btn => {
     const isSelected = btn.dataset.mood === key;
-    btn.style.background = isSelected ? mood.color + '18' : '';
+    btn.style.background  = isSelected ? mood.color + '18' : '';
     btn.style.borderColor = isSelected ? mood.color + '80' : 'transparent';
   });
 }
@@ -81,40 +90,39 @@ function selectMood(key) {
 function buildWeekGrid(entries) {
   const grid = document.getElementById('week-grid');
   if (!grid) return;
-  const now = new Date();
-  const dayOfWeek = (now.getDay() + 6) % 7;
-  const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const now        = new Date();
+  const dayOfWeek  = (now.getDay() + 6) % 7;
+  const DAYS       = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   grid.innerHTML = '';
-
   DAYS.forEach(d => {
     const lbl = document.createElement('div');
-    lbl.className = 'text-[10px] text-gray-400 font-semibold pb-1';
+    lbl.className   = 'text-[10px] text-gray-400 font-semibold pb-1';
     lbl.textContent = d;
     grid.appendChild(lbl);
   });
 
   DAYS.forEach((_, i) => {
-    const date = new Date(now);
+    const date  = new Date(now);
     date.setDate(now.getDate() - dayOfWeek + i);
-    const key = date.toISOString().split('T')[0];
+    const key   = date.toISOString().split('T')[0];
     const entry = entries[key];
-    const m = entry ? MOODS.find(x => x.key === entry.mood) : null;
+    const m     = entry ? MOODS.find(x => x.key === entry.mood) : null;
 
     const circle = document.createElement('div');
-    circle.className = 'w-8 h-8 rounded-full border-2 mx-auto flex items-center justify-center';
+    circle.className     = 'w-8 h-8 rounded-full border-2 mx-auto flex items-center justify-center';
     circle.style.borderColor = m ? m.color : '#ddd';
-    circle.style.background = m ? m.color + '18' : 'transparent';
-    if (m) circle.innerHTML = `<span style="width:18px;height:18px;display:block">${moodSVG(m, 18)}</span>`;
+    circle.style.background  = m ? m.color + '18' : 'transparent';
+    if (m) circle.innerHTML  = `<span style="width:18px;height:18px;display:block">${moodSVG(m, 18)}</span>`;
     grid.appendChild(circle);
   });
 }
 
 // UPDATE: Sekarang menerima data `entries` dari parameter
 function loadStats(entries) {
-  const now = new Date();
+  const now         = new Date();
   const monthPrefix = now.toISOString().slice(0, 7);
-  const monthly = Object.entries(entries).filter(([k]) => k.startsWith(monthPrefix));
+  const monthly     = Object.entries(entries).filter(([k]) => k.startsWith(monthPrefix));
 
   setText('stat-entries', monthly.length);
 
@@ -133,7 +141,7 @@ function loadStats(entries) {
   if (monthly.length && iconEl) {
     const freq = {};
     monthly.forEach(([, v]) => { freq[v.mood] = (freq[v.mood] || 0) + 1; });
-    const topKey = Object.entries(freq).sort((a, b) => b[1] - a[1])[0][0];
+    const topKey  = Object.entries(freq).sort((a, b) => b[1] - a[1])[0][0];
     const topMood = MOODS.find(m => m.key === topKey);
     if (topMood) iconEl.innerHTML = moodSVG(topMood, 28);
   } else if (iconEl) {
@@ -144,30 +152,17 @@ function loadStats(entries) {
 // UPDATE: Ambil data dari Supabase dan ubah jadi format Object/Map seperti localStorage dulu
 async function fetchEntries() {
   if (!currentUser) return {};
-
   const { data, error } = await supabaseClient
     .from('mood_entries')
     .select('*')
     .eq('user_id', currentUser.id);
 
-  if (error) {
-    console.error('Error fetching entries:', error);
-    return {};
-  }
-
-  // Ubah array data jadi object dengan format { 'YYYY-MM-DD': { mood: '...', note: '...' } }
-  const formattedEntries = {};
-  data.forEach(entry => {
-    formattedEntries[entry.date] = entry;
-  });
+  if (error) { console.error('Error fetching entries:', error); return {}; }
   
-  return formattedEntries;
-}
-
-function toggleTag(el) {
-  const isSelected = el.dataset.selected === 'true';
-  el.dataset.selected = !isSelected;
-  el.style.borderColor = !isSelected ? '#1F915A' : 'transparent';
+  // Ubah array data jadi object dengan format { 'YYYY-MM-DD': { mood: '...', note: '...' } }
+  const out = {};
+  data.forEach(e => { out[e.date] = e; });
+  return out;
 }
 
 // UPDATE: Menyimpan data langsung ke Supabase (Upsert)
@@ -175,38 +170,38 @@ async function saveMood() {
   if (!selectedMood) { showToast('⚠️ Please pick a mood first!', true); return; }
 
   const note = document.getElementById('note-input').value.trim();
-  const tags = [...document.querySelectorAll('.tag[data-selected="true"]')].map(t => t.textContent.trim());
+
+  // Read tags from the shared tag section
+  const tagContainer = document.getElementById('home-tag-container');
+  const tags = tagContainer ? getSelectedTags(tagContainer) : [];
 
   try {
     const todayStr = new Date().toISOString().split('T')[0];
 
     const { error } = await supabaseClient
       .from('mood_entries')
-      .upsert({ 
+      .upsert({
         user_id: currentUser.id,
-        date: todayStr,
-        mood: selectedMood,
-        note: note,
-        tags: tags
+        date:    todayStr,
+        mood:    selectedMood,
+        note:    note,
+        tags:    tags,
       }, { onConflict: 'user_id,date' });
 
     if (error) throw error;
 
     // Reset Form UI
     document.getElementById('note-input').value = '';
-    document.querySelectorAll('.tag').forEach(t => {
-      t.dataset.selected = 'false';
-      t.style.borderColor = 'transparent';
-    });
     selectedMood = null;
     document.querySelectorAll('#log-moods button').forEach(btn => {
-      btn.style.background = '';
+      btn.style.background  = '';
       btn.style.borderColor = 'transparent';
     });
 
     showToast('Mood saved to Cloud! 🎉');
 
     // Render ulang grid dan statistik dengan data terbaru
+    refreshTagSection();
     const updatedEntries = await fetchEntries();
     buildWeekGrid(updatedEntries);
     loadStats(updatedEntries);
@@ -219,7 +214,7 @@ async function saveMood() {
 
 function showToast(msg, warn = false) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
+  t.textContent      = msg;
   t.style.background = warn ? '#e07b30' : '#1F915A';
   t.classList.remove('translate-y-16', 'opacity-0');
   t.classList.add('translate-y-0', 'opacity-100');

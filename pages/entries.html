@@ -24,10 +24,10 @@
       </button>
     </div>
 
+    <!-- Search + Sort -->
     <div class="flex flex-col md:flex-row md:items-center gap-3 mb-5">
-      
       <div class="flex items-center gap-2 flex-1 w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-gray-400 shrink-0">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="text-gray-400 shrink-0">
           <circle cx="7" cy="7" r="5.5" stroke="#9CA3AF" stroke-width="1.5"/>
           <path d="M11 11L14 14" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
@@ -35,7 +35,6 @@
           class="flex-1 w-full text-sm text-gray-700 bg-transparent focus:outline-none placeholder-gray-300 font-[Poppins]"
           oninput="renderEntries()" />
       </div>
-
       <div class="flex gap-2 w-full md:w-auto">
         <button id="btn-newest" onclick="setSort('newest')"
           class="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border-2 text-xs font-semibold transition-all sort-btn border-primary text-primary bg-pink-bg">
@@ -48,9 +47,9 @@
           Oldest
         </button>
       </div>
-
     </div>
 
+    <!-- Mood filter chips -->
     <div class="flex gap-2 flex-wrap mb-6" id="mood-filters">
       <button onclick="setFilter('all')" data-filter="all"
         class="filter-chip px-4 py-1.5 rounded-full text-xs font-semibold border-2 transition-all border-primary bg-pink-bg text-primary">
@@ -58,15 +57,19 @@
       </button>
     </div>
 
+    <!-- Entry list -->
     <div id="entries-container"></div>
 
   </main>
 
+  <!-- add entry modal -->
   <div id="modal-overlay"
     class="fixed inset-0 bg-black/30 flex items-center justify-center z-50 hidden px-4">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 sm:p-7 flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
+
       <h2 class="text-lg font-bold text-primary" id="modal-title">Add Entry</h2>
 
+      <!-- Date row -->
       <div class="flex flex-col sm:flex-row sm:items-center gap-3">
         <div class="flex items-center gap-2 bg-pink-bg rounded-xl px-4 py-2.5 w-full">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="text-primary shrink-0">
@@ -82,11 +85,13 @@
         </button>
       </div>
 
+      <!-- Mood selector -->
       <div>
         <label class="text-xs font-semibold text-gray-600 block mb-3">How are you feeling?</label>
         <div class="flex gap-1 sm:gap-2 justify-between flex-wrap" id="modal-mood-row"></div>
       </div>
 
+      <!-- Note -->
       <div>
         <label class="text-xs font-semibold text-gray-600 block mb-2">Note (optional)</label>
         <textarea id="modal-note" placeholder="What's on your mind?"
@@ -94,24 +99,13 @@
         </textarea>
       </div>
 
+      <!-- Tags -->
       <div>
         <label class="text-xs font-semibold text-gray-600 block mb-2">Tags</label>
-        <div class="flex gap-2 flex-wrap" id="modal-tags">
-          <span onclick="toggleTag(this)" data-tag="College"
-            class="modal-tag px-4 py-1.5 rounded-full text-xs font-semibold cursor-pointer bg-[#d4f0e2] text-[#1a7a42] border-2 border-transparent hover:scale-105 transition-all">
-            College
-          </span>
-          <span onclick="toggleTag(this)" data-tag="Work"
-            class="modal-tag px-4 py-1.5 rounded-full text-xs font-semibold cursor-pointer bg-[#ffe5cc] text-[#b85e00] border-2 border-transparent hover:scale-105 transition-all">
-            Work
-          </span>
-          <span onclick="toggleTag(this)" data-tag="Personal"
-            class="modal-tag px-4 py-1.5 rounded-full text-xs font-semibold cursor-pointer bg-pink-bg text-primary border-2 border-transparent hover:scale-105 transition-all">
-            Personal
-          </span>
-        </div>
+        <div id="modal-tag-container" class="flex gap-2 flex-wrap"></div>
       </div>
 
+      <!-- Actions -->
       <div class="flex gap-3 pt-1">
         <button onclick="closeModal()"
           class="flex-1 py-3 rounded-full border-2 border-gray-200 text-gray-500 text-sm font-bold hover:border-gray-300 transition-all">
@@ -122,9 +116,11 @@
           Save Entry
         </button>
       </div>
+
     </div>
   </div>
 
+  <!-- Toast -->
   <div id="toast"
     class="fixed bottom-8 left-1/2 -translate-x-1/2 translate-y-16 opacity-0 pointer-events-none
            bg-primary text-white px-8 py-3 rounded-full text-sm font-semibold shadow-lg
@@ -134,6 +130,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/supabase-config.js"></script>
   <script src="../js/navbar.js"></script>
+  <script src="../js/tags.js"></script>
   <script src="../js/entries.js"></script>
 </body>
 </html>

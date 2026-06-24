@@ -36,7 +36,10 @@ const navHTML = `
 
     <a href="account.html" class="flex items-center justify-center lg:justify-start gap-3 mt-2 lg:mt-0 pt-4 lg:pt-0 border-t border-[#1F915A20] lg:border-none">
       <span class="text-primary font-semibold text-sm" id="nav-username">Name</span>
-      <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold" id="nav-avatar">N</div>
+      <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold relative overflow-hidden">
+        <img id="nav-avatar-img" class="w-full h-full object-cover hidden" src="" alt="Profile">
+        <span id="nav-avatar">N</span>
+      </div>
     </a>
     
   </div>
@@ -79,11 +82,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (user) {
       const name = user.user_metadata?.full_name || user.email.split('@')[0];
-      const navUsername = document.getElementById('nav-username');
-      const navAvatar = document.getElementById('nav-avatar');
-      
-      if (navUsername) navUsername.textContent = name;
-      if (navAvatar) navAvatar.textContent = name.charAt(0).toUpperCase();
+      const avatarUrl = user.user_metadata?.avatar_url || null;
+      navSetUser(name, avatarUrl);
     }
   }
 });
+
+// Helper global — bisa dipanggil dari account.js setelah update
+function navSetUser(name, avatarUrl) {
+  const navUsername = document.getElementById('nav-username');
+  const navAvatarImg = document.getElementById('nav-avatar-img');
+  const navAvatar = document.getElementById('nav-avatar');
+
+  if (navUsername) navUsername.textContent = name;
+
+  if (avatarUrl) {
+    if (navAvatarImg) {
+      navAvatarImg.src = avatarUrl;
+      navAvatarImg.classList.remove('hidden');
+    }
+    if (navAvatar) navAvatar.classList.add('hidden');
+  } else {
+    if (navAvatarImg) {
+      navAvatarImg.classList.add('hidden');
+    }
+    if (navAvatar) {
+      navAvatar.textContent = name.charAt(0).toUpperCase();
+      navAvatar.classList.remove('hidden');
+    }
+  }
+}

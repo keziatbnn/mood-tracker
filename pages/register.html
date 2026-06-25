@@ -8,18 +8,24 @@
   <script src="../js/tailwind.config.js"></script>
 
   <style>
-  input[type="password"]::-ms-reveal,
-  input[type="password"]::-ms-clear {
-    display: none;
-  }
-  
-  input[type="password"]::-webkit-contacts-auto-fill-button,
-  input[type="password"]::-webkit-credentials-auto-fill-button {
-    visibility: hidden;
-    display: none !important;
-    pointer-events: none;
-  }
-</style>
+    input[type="password"]::-ms-reveal,
+    input[type="password"]::-ms-clear {
+      display: none;
+    }
+    
+    input[type="password"]::-webkit-contacts-auto-fill-button,
+    input[type="password"]::-webkit-credentials-auto-fill-button {
+      visibility: hidden;
+      display: none !important;
+      pointer-events: none;
+    }
+  </style>
+
+  <script>
+    if (Object.keys(localStorage).some(key => key.includes('-auth-token'))) {
+      window.location.replace('home.html');
+    }
+  </script>
 
 </head>
 <body class="bg-page-bg font-sans">

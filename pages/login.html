@@ -21,6 +21,12 @@
     }
   </style>
 
+  <script>
+  if (Object.keys(localStorage).some(key => key.includes('-auth-token'))) {
+    window.location.replace('home.html');
+  }
+</script>
+
 </head>
 <body class="bg-page-bg font-sans">
   <div id="navbar"></div>

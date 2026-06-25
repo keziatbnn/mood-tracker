@@ -225,14 +225,15 @@ const centerTextPlugin = {
     const { top, bottom, left, right } = chart.chartArea;
     const cx = (left + right) / 2;
     const cy = (top + bottom) / 2;
-    const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+    const realTotal = Object.keys(cachedEntries).length;
 
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.font = 'bold 26px Poppins, sans-serif';
     ctx.fillStyle = '#3d3d3d';
-    ctx.fillText(total || '—', cx, cy - 9);
+    // Menampilkan angka 0 jika realTotal kosong
+    ctx.fillText(realTotal, cx, cy - 9); 
     ctx.font = '500 11px Poppins, sans-serif';
     ctx.fillStyle = '#999';
     ctx.fillText('entries', cx, cy + 11);

@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupToggle('toggleConfirmPassword', 'confirmPassword', 'eyeIconConfirm');
 
   /* ── TANGKAP TOKEN DARI URL HASH ── */
-  // Supabase kirim token via URL hash: #access_token=xxx&type=recovery
   const hash        = window.location.hash;
   const params      = new URLSearchParams(hash.replace('#', ''));
   const accessToken = params.get('access_token');
@@ -17,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.log('Access token ada:', !!accessToken);
 
   if (!accessToken || type !== 'recovery') {
-    showMessage('updateMessage', 'Reset link tidak valid atau sudah kadaluarsa. Silakan minta link baru.', true);
+    showMessage('updateMessage', 'The reset link is invalid or has expired. Please request a new link.', true);
     document.getElementById('saveBtn').disabled = true;
     return;
   }
@@ -30,12 +29,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (sessionError) {
     console.error('Session error:', sessionError);
-    showMessage('updateMessage', 'Reset link tidak valid atau sudah kadaluarsa. Silakan minta link baru.', true);
+    showMessage('updateMessage', 'The reset link is invalid or has expired. Please request a new link.', true);
     document.getElementById('saveBtn').disabled = true;
     return;
   }
 
-  showMessage('updateMessage', 'Link valid! Silakan masukkan password baru kamu.', false);
+  showMessage('updateMessage', 'Link valid! Please enter your new password.', false);
 
   /* ── UPDATE PASSWORD ── */
   document.getElementById('updatePasswordForm').addEventListener('submit', async (e) => {
@@ -46,22 +45,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     const saveBtn         = document.getElementById('saveBtn');
 
     if (!newPassword || !confirmPassword) {
-      showMessage('updateMessage', 'Harap isi semua field.', true);
+      showMessage('updateMessage', 'Please fill in all fields.', true);
       return;
     }
 
     if (newPassword.length < 6) {
-      showMessage('updateMessage', 'Password minimal 6 karakter.', true);
+      showMessage('updateMessage', 'Password must be at least 6 characters long.', true);
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      showMessage('updateMessage', 'Password tidak cocok.', true);
+      showMessage('updateMessage', 'Passwords do not match.', true);
       return;
     }
 
     saveBtn.disabled = true;
-    saveBtn.textContent = 'Menyimpan...';
+    saveBtn.textContent = 'Saving...';
 
     try {
       const { error } = await supabaseClient.auth.updateUser({
@@ -70,7 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (error) throw error;
 
-      showMessage('updateMessage', 'Password berhasil diubah! Mengalihkan ke halaman login...', false);
+      showMessage('updateMessage', 'Password successfully updated! Redirecting to login page...', false);
 
       await supabaseClient.auth.signOut();
 
@@ -80,7 +79,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     } catch (err) {
       console.error('Update error:', err);
-      showMessage('updateMessage', err.message || 'Gagal mengubah password. Coba lagi.', true);
+      showMessage('updateMessage', err.message || 'Failed to update password. Please try again.', true);
     } finally {
       saveBtn.disabled = false;
       saveBtn.textContent = 'SAVE NEW PASSWORD';

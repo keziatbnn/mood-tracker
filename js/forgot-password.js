@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         msg.innerHTML =
           '<p style="color:green">' +
-          'Reset link berhasil dikirim ke email.' +
+          'A reset link has been successfully sent to your email.' +
           '</p>';
 
       }

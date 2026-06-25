@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoodTracker</title>
+</head>
+<body style="background-color: #F8F9FA; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif;">
+
+  <p style="color: #1F915A; font-weight: bold;">Loading MoodTracker...</p>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session }, error } = await supabaseClient.auth.getSession();
+      
+      if (session) {
+        window.location.replace('pages/home.html');
+      } else {
+        window.location.replace('pages/login.html');
+      }
+    });
+  </script>
+
+</body>
+</html>

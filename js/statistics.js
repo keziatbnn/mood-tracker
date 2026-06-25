@@ -61,7 +61,7 @@ async function loadEntriesFromCloud() {
   }
 }
 
-// ── Summary cards ──────────────────────────────────────────────────────────
+// ── Summary cards ──
 function renderSummary() {
   const entries = cachedEntries;
   const all = Object.entries(entries);
@@ -89,7 +89,7 @@ function renderSummary() {
     all.length ? Math.round(pos / all.length * 100) + '%' : '0%';
 }
 
-// ── Trend chart data builders ───────────────────────────────────────────────
+// ── Trend chart data builders ──
 function getTrendData() {
   const entries = cachedEntries;
   const now = new Date();
@@ -147,7 +147,7 @@ function getTrendData() {
   return { labels: MONTH_NAMES, data, colors };
 }
 
-// ── Trend chart ─────────────────────────────────────────────────────────────
+// ── Trend chart ──
 function initTrendChart() {
   const { labels, data, colors } = getTrendData();
   const ctx = document.getElementById('trend-chart').getContext('2d');
@@ -217,7 +217,7 @@ function updateTrendChart() {
   trendChart.update();
 }
 
-// ── Donut chart ─────────────────────────────────────────────────────────────
+// ── Donut chart ──
 const centerTextPlugin = {
   id: 'centerText',
   beforeDraw(chart) {

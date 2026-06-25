@@ -13,7 +13,7 @@ const MONTH_NAMES = [
 
 let viewYear, viewMonth, selectedKey;
 let currentUser = null;
-let cachedEntries = {}; // Pengganti getEntries() dari localStorage
+let cachedEntries = {};
 
 function moodSVG(m, size = 44) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -67,7 +67,7 @@ async function loadEntriesFromCloud() {
 function renderCalendar() {
   document.getElementById('month-label').textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
 
-  const entries    = cachedEntries; // Menggunakan data dari Cloud
+  const entries    = cachedEntries;
   const grid       = document.getElementById('cal-grid');
   const today      = new Date().toISOString().split('T')[0];
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();

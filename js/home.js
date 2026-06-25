@@ -7,7 +7,7 @@ const MOODS = [
 ];
 
 let selectedMood = null;
-let currentUser  = null; // Menyimpan data user yang sedang login
+let currentUser  = null;
 
 function moodSVG(m, size = 44) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -39,7 +39,6 @@ async function init() {
   await loadCustomTags(currentUser.id);
   refreshTagSection();
 
-  // 2. Ambil data dari Supabase lalu render UI
   const entries = await fetchEntries();
   buildWeekGrid(entries);
   loadStats(entries);
@@ -86,7 +85,6 @@ function selectMood(key) {
   });
 }
 
-// UPDATE: Sekarang menerima data `entries` dari parameter
 function buildWeekGrid(entries) {
   const grid = document.getElementById('week-grid');
   if (!grid) return;
@@ -118,7 +116,6 @@ function buildWeekGrid(entries) {
   });
 }
 
-// UPDATE: Sekarang menerima data `entries` dari parameter
 function loadStats(entries) {
   const now         = new Date();
   const monthPrefix = now.toISOString().slice(0, 7);
@@ -145,11 +142,10 @@ function loadStats(entries) {
     const topMood = MOODS.find(m => m.key === topKey);
     if (topMood) iconEl.innerHTML = moodSVG(topMood, 28);
   } else if (iconEl) {
-    iconEl.innerHTML = ''; // Kosongkan jika belum ada data bulan ini
+    iconEl.innerHTML = '<span class="text-3xl text-gray-300 font-bold">—</span>'; 
   }
 }
 
-// UPDATE: Ambil data dari Supabase dan ubah jadi format Object/Map seperti localStorage dulu
 async function fetchEntries() {
   if (!currentUser) return {};
   const { data, error } = await supabaseClient
@@ -159,13 +155,11 @@ async function fetchEntries() {
 
   if (error) { console.error('Error fetching entries:', error); return {}; }
   
-  // Ubah array data jadi object dengan format { 'YYYY-MM-DD': { mood: '...', note: '...' } }
   const out = {};
   data.forEach(e => { out[e.date] = e; });
   return out;
 }
 
-// UPDATE: Menyimpan data langsung ke Supabase (Upsert)
 async function saveMood() {
   if (!selectedMood) { showToast('⚠️ Please pick a mood first!', true); return; }
 
@@ -198,7 +192,7 @@ async function saveMood() {
       btn.style.borderColor = 'transparent';
     });
 
-    showToast('Mood saved to Cloud! 🎉');
+    showToast('Mood saved to Cloud!');
 
     // Render ulang grid dan statistik dengan data terbaru
     refreshTagSection();
@@ -208,7 +202,7 @@ async function saveMood() {
 
   } catch (err) {
     console.error(err);
-    showToast('⚠️ Gagal menyimpan data: ' + err.message, true);
+    showToast('Failed to save data: ' + err.message, true);
   }
 }
 

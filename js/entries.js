@@ -11,7 +11,7 @@ let currentSort   = 'newest';
 let editingKey    = null;
 let modalMood     = null;
 let currentUser   = null;
-let cachedEntries = {}; // Menyimpan data dari cloud sementara untuk UI
+let cachedEntries = {};
 
 function moodSVG(m, size = 44) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -29,7 +29,6 @@ async function init() {
 
   buildFilterChips();
 
-  // Load custom tags FIRST, then build modal mood row + entries
   await loadCustomTags(currentUser.id);
   buildModalMoodRow();
   await loadEntriesFromCloud();
@@ -160,7 +159,7 @@ async function deleteEntry(key) {
     .match({ user_id: currentUser.id, date: key });
 
   if (error) { showToast('Failed to delete entry', true); return; }
-  await loadEntriesFromCloud(); // Ambil ulang data
+  await loadEntriesFromCloud();
   showToast('Entry deleted');
 }
 
@@ -274,7 +273,7 @@ async function saveEntry() {
   if (error) { showToast('Failed to save entry', true); return; }
 
   closeModal();
-  await loadEntriesFromCloud(); // Ambil ulang data yang paling update
+  await loadEntriesFromCloud();
   showToast(editingKey ? 'Entry updated!' : 'Entry saved!');
 }
 
@@ -291,7 +290,7 @@ function showToast(msg, warn = false) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  init(); // Panggil fungsi init async yang baru
+  init();
   document.getElementById('modal-overlay').addEventListener('click', e => {
     if (e.target === document.getElementById('modal-overlay')) closeModal();
   });

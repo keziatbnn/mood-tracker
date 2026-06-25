@@ -371,22 +371,29 @@ document.getElementById('passwordForm').addEventListener('submit', async (e) => 
   }
 });
 
-/* ── DELETE ACCOUNT MOOD HISTORY ── */
-function confirmDeleteAccount() {
-  const sure = confirm('Are you sure? This will permanently delete your account and all mood entries. This cannot be undone.');
-  if (sure) deleteAccount();
-}
+/* ── DELETE ACCOUNT ── */
+async function confirmDeleteAccount() {
+  // 1. Tampilkan peringatan konfirmasi bawaan browser
+  const isConfirmed = confirm(
+    "WARNING: This action will permanently delete your account and all your mood history. It cannot be undone.\n\nAre you sure?"
+  );
 
-async function deleteAccount() {
+  if (!isConfirmed) {
+    return;
+  }
+
   try {
-    // Hapus semua baris data di tabel cloud milik user aktif
-    const { error } = await supabaseClient.from('mood_entries').delete().eq('user_id', currentUser.id);
-    if (error) throw error;
+    const { error: rpcError } = await supabaseClient.rpc('delete_user');
     
-    alert('Your mood data has been deleted safely from cloud.');
-    await logout();
+    if (rpcError) throw rpcError;
+
+    await supabaseClient.auth.signOut();
+    
+    window.location.replace('register.html');
+    
   } catch (err) {
-    alert('Failed to delete data: ' + err.message);
+    console.error("Gagal menghapus akun:", err.message);
+    alert("Failed to delete account: " + err.message);
   }
 }
 
